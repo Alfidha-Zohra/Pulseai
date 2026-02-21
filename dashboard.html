@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse | Tourism Command</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="dash-style.css">
+</head>
+<body>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="brand">PULSE<span>.ai</span></div>
+            <nav class="menu">
+                <a href="#" class="active">Overview</a>
+                <a href="forecast.html">Forecasts</a>
+                <a href="simulator.html">Risk Hub</a>
+            </nav>
+            
+            <div class="filters-box">
+                <label>Market View</label>
+                <select id="region"><option>Global</option></select>
+                
+                <label>Travel Type</label>
+                <select id="type"><option>International</option></select>
+                
+                <label>Season</label>
+                <select id="season"><option>Summer 2026</option></select>
+            </div>
+        </aside>
+
+        <main class="content">
+            <header class="kpi-row">
+                <div class="stat-card">
+                    <p>Predicted Tourists</p>
+                    <h3>14.2M <span class="up">+12%</span></h3>
+                </div>
+                <div class="stat-card">
+                    <p>Demand Risk</p>
+                    <h3 class="status-low">Low</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Confidence</p>
+                    <h3>94.8%</h3>
+                </div>
+                <div class="stat-card destinations">
+                    <p>Top Markets</p>
+                    <div class="pill-wrap">
+                        <span>Tokyo</span><span>Paris</span><span>Dubai</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="visual-grid">
+                <div class="grid-box span-2">
+                    <div class="box-header">Global Heatmap</div>
+                    <div id="world-map"></div>
+                </div>
+
+                <div class="grid-box">
+                    <div class="box-header">Monthly Demand</div>
+                    <canvas id="barChart"></canvas>
+                </div>
+
+                <div class="grid-box span-2">
+                    <div class="box-header">12-Month Projection Flow</div>
+                    <canvas id="lineChart"></canvas>
+                </div>
+
+                <div class="grid-box">
+                    <div class="box-header">Annual Growth</div>
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
+    <script src="dash-script.js"></script>
+</body>
+</html>
