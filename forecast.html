@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse | AI Forecast Engine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --accent-orange: #f2994a;
+            --accent-blue: #2d9cdb;
+            --card-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg-color); }
+
+        /* --- Navbar & Sidebar (Simplified for Screen 3) --- */
+        .nav-header { background: white; border-bottom: 1px solid #eee; padding: 15px 0; }
+
+        /* --- Filter Panel --- */
+        .filter-panel {
+            background: white; border-radius: 20px; padding: 25px;
+            box-shadow: var(--card-shadow); margin-bottom: 30px;
+        }
+
+        .filter-label { font-size: 0.8rem; font-weight: 700; color: #adb5bd; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* --- Forecast Display --- */
+        .main-forecast-card {
+            background: white; border-radius: 24px; padding: 40px;
+            box-shadow: var(--card-shadow); border: 1px solid rgba(242, 153, 74, 0.1);
+        }
+
+        .insight-pill {
+            background: #fff4e6; color: #d35400;
+            padding: 8px 16px; border-radius: 30px; font-size: 0.9rem; font-weight: 600;
+        }
+
+        #forecastCanvas { height: 400px !important; }
+
+        .btn-update {
+            background: var(--accent-orange); color: white;
+            border: none; padding: 12px 25px; border-radius: 12px;
+            font-weight: 600; transition: 0.3s;
+        }
+        .btn-update:hover { background: #e67e22; transform: scale(1.02); }
+    </style>
+</head>
+<body>
+
+    <header class="nav-header mb-4">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="dashboard.html" class="text-decoration-none text-dark fw-bold">← Back to Dashboard</a>
+            <h5 class="mb-0 fw-bold">AI Forecast Engine <span class="badge bg-dark ms-2">v2.4</span></h5>
+            <div class="user-profile">⚙️</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="filter-panel">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="filter-label d-block mb-2">Destination</label>
+                    <select class="form-select border-0 bg-light py-3" id="locationSelect">
+                        <option value="tokyo">Tokyo, Japan</option>
+                        <option value="paris">Paris, France</option>
+                        <option value="bali">Bali, Indonesia</option>
+                        <option value="nyc">New York, USA</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label d-block mb-2">Time Period</label>
+                    <select class="form-select border-0 bg-light py-3" id="timeSelect">
+                        <option value="monthly">Monthly Forecast</option>
+                        <option value="yearly">Yearly Forecast</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="filter-label d-block mb-2">Tourist Type</label>
+                    <select class="form-select border-0 bg-light py-3" id="typeSelect">
+                        <option value="intl">International Visitors</option>
+                        <option value="domestic">Domestic Visitors</option>
+                        <option value="both">All Travel Types</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-update w-100 py-3" onclick="updateForecast()">Generate Forecast</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="main-forecast-card">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1" id="displayTitle">Tokyo Trend Analysis</h2>
+                    <p class="text-muted">Prediction Model: <span class="text-dark fw-bold">Neural-Prophet 2026</span></p>
+                </div>
+                <div class="insight-pill">✨ 92% Prediction Confidence</div>
+            </div>
+
+            <div class="row mb-5">
+                <div class="col-md-4 border-end">
+                    <p class="text-muted small mb-0">Predicted Volume</p>
+                    <h3 class="fw-bold" id="predVolume">2.4M</h3>
+                </div>
+                <div class="col-md-4 border-end ps-4">
+                    <p class="text-muted small mb-0">Growth vs LY</p>
+                    <h3 class="fw-bold text-success" id="predGrowth">+18.4%</h3>
+                </div>
+                <div class="col-md-4 ps-4">
+                    <p class="text-muted small mb-0">Risk Assessment</p>
+                    <h3 class="fw-bold text-warning">Low Impact</h3>
+                </div>
+            </div>
+
+            <canvas id="forecastCanvas"></canvas>
+
+            <div class="mt-4 p-3 bg-light rounded-3">
+                <p class="mb-0 small text-muted"><strong>AI Recommendation:</strong> Based on the spike in <strong>October</strong>, we recommend increasing flight frequency from European hubs by 15% to meet predicted demand.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let forecastChart;
+
+        function initChart() {
+            const ctx = document.getElementById('forecastCanvas').getContext('2d');
+            forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        {
+                            label: 'Historical Data',
+                            data: [400, 450, 420, 500, 550, 530, null, null, null, null, null, null],
+                            borderColor: '#2d3436',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'AI Forecast',
+                            data: [null, null, null, null, null, 530, 600, 680, 850, 1100, 950, 1200],
+                            borderColor: '#f2994a',
+                            borderDash: [5, 5],
+                            borderWidth: 3,
+                            backgroundColor: 'rgba(242, 153, 74, 0.05)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateForecast() {
+            const city = document.getElementById('locationSelect').value;
+            const type = document.getElementById('typeSelect').value;
+            
+            // Update Text UI
+            document.getElementById('displayTitle').innerText = city.toUpperCase() + " Trend Analysis";
+            
+            // Simulate Data Change based on Type
+            let baseData = type === 'intl' ? [600, 700, 800, 1100, 1000, 1300] : [300, 320, 350, 400, 450, 500];
+            
+            // Update Chart
+            forecastChart.data.datasets[1].data = [null, null, null, null, null, 530, ...baseData];
+            forecastChart.update();
+
+            // Update Volume Metric
+            document.getElementById('predVolume').innerText = type === 'intl' ? '4.1M' : '1.8M';
+        }
+
+        window.onload = initChart;
+    </script>
+</body>
+</html>

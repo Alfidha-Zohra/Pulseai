@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse | Scenario Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --accent-purple: #6c5ce7;
+            --accent-orange: #f2994a;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg-color); }
+
+        .control-panel {
+            background: white; border-radius: 24px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .simulation-result {
+            background: white; border-radius: 24px; padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        /* Slider Styling */
+        .form-range::-webkit-slider-thumb { background: var(--accent-purple); }
+        
+        .delta-badge {
+            font-size: 0.9rem; padding: 8px 15px; border-radius: 12px; font-weight: 700;
+        }
+        .delta-positive { background: #e3f9e5; color: #27ae60; }
+        .delta-negative { background: #ffeaa7; color: #d35400; }
+
+        .variable-card {
+            border: 1px solid #eee; border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            transition: 0.3s;
+        }
+        .variable-card:hover { border-color: var(--accent-purple); }
+
+        #simChart { height: 450px !important; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-light bg-white border-bottom py-3 mb-4">
+        <div class="container">
+            <a href="dashboard.html" class="text-decoration-none text-dark fw-bold">← Back</a>
+            <span class="navbar-text fw-bold text-uppercase" style="letter-spacing: 2px;">What-If Simulator</span>
+            <span class="badge bg-soft-primary text-primary" style="background:#eef2ff">Beta 2026</span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="control-panel">
+                    <h5 class="fw-bold mb-4">Adjust Variables</h5>
+                    
+                    <div class="variable-card">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Currency Value</span>
+                            <span class="fw-bold text-purple" id="currencyVal">0%</span>
+                        </label>
+                        <input type="range" class="form-range" min="-30" max="30" step="5" value="0" id="currencySlider">
+                        <p class="small text-muted mt-2 mb-0">Simulate local currency fluctuation.</p>
+                    </div>
+
+                    <div class="variable-card">
+                        <div class="form-check form-switch">
+                            <input class="form-check-switch form-check-input" type="checkbox" id="festivalToggle">
+                            <label class="form-check-label fw-bold" for="festivalToggle">Add Global Expo (Q3)</label>
+                        </div>
+                        <p class="small text-muted mt-2 mb-0">Impact of major festivals or events.</p>
+                    </div>
+
+                    <div class="variable-card">
+                        <label class="form-label fw-bold">Global Economy</label>
+                        <select class="form-select border-0 bg-light" id="economySelect">
+                            <option value="1">Stable Growth</option>
+                            <option value="0.7">Economic Slowdown</option>
+                            <option value="1.3">Global Travel Boom</option>
+                        </select>
+                    </div>
+
+                    <button class="btn btn-dark w-100 py-3 mt-3 shadow" onclick="runSimulation()">
+                        Recalculate Model
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="simulation-result">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold m-0">Predicted Impact</h4>
+                        <div id="statusBadge" class="delta-badge delta-positive">No Change Detected</div>
+                    </div>
+
+                    <canvas id="simChart"></canvas>
+
+                    <div class="row mt-4 text-center">
+                        <div class="col-4">
+                            <p class="text-muted small mb-1">Baseline Total</p>
+                            <h5 class="fw-bold">12.4M</h5>
+                        </div>
+                        <div class="col-4">
+                            <p class="text-muted small mb-1">Simulated Total</p>
+                            <h5 class="fw-bold text-purple" id="simTotal">12.4M</h5>
+                        </div>
+                        <div class="col-4">
+                            <p class="text-muted small mb-1">Revenue Delta</p>
+                            <h5 class="fw-bold" id="revDelta">$0</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let simChart;
+        const baselineData = [800, 850, 780, 900, 1100, 1050, 950, 1200, 1350, 1600, 1550, 1700];
+
+        function initChart() {
+            const ctx = document.getElementById('simChart').getContext('2d');
+            simChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        {
+                            label: 'Baseline Forecast',
+                            data: baselineData,
+                            borderColor: '#dfe6e9',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Simulated Scenario',
+                            data: [...baselineData],
+                            borderColor: '#6c5ce7',
+                            backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function runSimulation() {
+            const currencyEffect = parseInt(document.getElementById('currencySlider').value);
+            const economyEffect = parseFloat(document.getElementById('economySelect').value);
+            const hasFestival = document.getElementById('festivalToggle').checked;
+
+            // Simple Simulation Logic:
+            // 1. Lower currency value (+%) increases tourism (+%)
+            const currencyModifier = 1 - (currencyEffect / 100); 
+            
+            const newData = baselineData.map((val, index) => {
+                let newVal = val * economyEffect * currencyModifier;
+                
+                // Add spike for Festival in Aug/Sep (index 7, 8)
+                if (hasFestival && (index === 7 || index === 8)) {
+                    newVal += 400;
+                }
+                return Math.round(newVal);
+            });
+
+            // Update Chart
+            simChart.data.datasets[1].data = newData;
+            simChart.update();
+
+            // Update UI Labels
+            const total = newData.reduce((a, b) => a + b, 0);
+            document.getElementById('simTotal').innerText = (total / 1000000).toFixed(1) + "M";
+            document.getElementById('currencyVal').innerText = currencyEffect + "%";
+            
+            const diff = total - 14380; // Hardcoded baseline sum
+            const badge = document.getElementById('statusBadge');
+            if(diff > 0) {
+                badge.className = "delta-badge delta-positive";
+                badge.innerText = `+${Math.round(diff/100)}k Potential Arrivals`;
+            } else {
+                badge.className = "delta-badge delta-negative";
+                badge.innerText = `${Math.round(diff/100)}k Predicted Loss`;
+            }
+        }
+
+        window.onload = initChart;
+    </script>
+</body>
+</html>
